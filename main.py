@@ -12,7 +12,8 @@ def process(
     emotion_model: EmotionModel, 
     recognition_model: RecognitionModel,
     articles_csv_path: str,
-    politician_base_dir = 'party_members' 
+    politician_base_dir = 'party_members' ,
+    batch_size = 64,
 ):
     rename_files(politician_base_dir)
     art_df = pd.read_csv(articles_csv_path)
@@ -51,7 +52,13 @@ def process(
         entry += emotions.values()
         results.append(entry)
 
+        if i % batch_size == 0:
+            result = pd.DataFrame(results, columns=columns)
+            result.to_csv('out.csv')
+
+
     result = pd.DataFrame(results, columns=columns)
+    result.to_csv('out.csv')
     print(result)
    
 
@@ -59,7 +66,7 @@ def process(
 if __name__ == "__main__":
     emotion_model = DeepFaceEmotionModel()
     recognition_model = DeepFaceModel('bundestag_members_with_paths.csv')
-    article_csv = 'articles.csv'
+    article_csv = 'politician_data_set/politicians.csv'
 
     process(
         emotion_model,
