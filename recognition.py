@@ -39,7 +39,9 @@ class DeepFaceModel(RecognitionModel):
         self.df['image_path'] = self.df['image_path'].apply(normalize_filename)
 
     def __call__(self, img_path: str) -> Tuple[str, str, float, float]:
-        dfs: List[pd.DataFrame] = DeepFace.find(img_path = img_path, db_path=self.db_path)
+        dfs: List[pd.DataFrame] = DeepFace.find(img_path = img_path,
+                                                db_path=self.db_path,
+                                                detector_backend="retinaface")
 
         assert len(dfs) > 0, 'no result'
         df: pd.DataFrame = dfs[0]
