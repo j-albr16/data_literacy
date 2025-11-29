@@ -1,11 +1,24 @@
-import argparse
+import os
+import tensorflow as tf
+# tf.config.set_visible_devices([], 'GPU')
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+import argparse
 import pandas as pd
 from tqdm import tqdm
 
 from emotion import EmotionModel, DeepFaceEmotionModel
 from recognition import RecognitionModel, DeepFaceModel
 from utils import rename_files
+from argparse import ArgumentParser
+
+def get_args():
+    parser = ArgumentParser()
+    parser.add_argument("--politician_reference_csv", help="Directory to the csv describing the references for the politicians.")
+    parser.add_argument("--article_data_csv", help="Directory to the csv containing the image data.")
+    parser.add_argument("--politician_base_dir", help="Directory to the politician data.")
+
+    return parser.parse_args()
 
 
 def process(
@@ -32,13 +45,16 @@ def process(
         image_path = article['image_path']
         date = article['date']
         newspaper = article['newspaper']
-
         # find politician
         try:
-            name, surname, distance, confidence = recognition_model(image_path)
-            dominant_emotion, emotions = emotion_model(image_path)
+            name, surname, confidence, distance = recognition_model(image_path)
         except Exception as e:
             print(f'failed to process {image_path}: {e}')
+            continue
+        try:
+            dominant_emotion, emotions = emotion_model(image_path)
+        except Exception as e:
+            print(f'failed to get emotions for {image_path}: {e}')
             continue
  
         # add emotions keys to result
@@ -65,11 +81,13 @@ def process(
 
 if __name__ == "__main__":
     emotion_model = DeepFaceEmotionModel()
-    recognition_model = DeepFaceModel('bundestag_members_with_paths.csv')
-    article_csv = 'politician_data_set/politicians.csv'
+    args = get_args()
+    recognition_model = DeepFaceModel(args.politician_reference_csv)
+    article_csv = args.article_data_csv
 
     process(
         emotion_model,
         recognition_model,
-        article_csv
+        article_csv,
+        politician_base_dir= args.politician_base_dir #"politicians"
     )
