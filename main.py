@@ -12,7 +12,7 @@ def process(
     emotion_model: EmotionModel, 
     recognition_model: RecognitionModel,
     articles_csv_path: str,
-    politician_base_dir = 'party_members' ,
+    politician_base_dir = 'politicians' ,
     batch_size = 64,
 ):
     rename_files(politician_base_dir)
@@ -65,7 +65,7 @@ def process(
 
 if __name__ == "__main__":
     emotion_model = DeepFaceEmotionModel()
-    recognition_model = DeepFaceModel('bundestag_members_with_paths.csv')
+    recognition_model = DeepFaceModel('politicians/data.csv')
     article_csv = 'politician_data_set/politicians.csv'
 
     process(
