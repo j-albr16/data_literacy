@@ -14,9 +14,17 @@ from argparse import ArgumentParser
 
 def get_args():
     parser = ArgumentParser()
-    parser.add_argument("--politician_reference_csv", help="Directory to the csv describing the references for the politicians.")
-    parser.add_argument("--article_data_csv", help="Directory to the csv containing the image data.")
-    parser.add_argument("--politician_base_dir", help="Directory to the politician data.")
+    parser.add_argument("--politician_reference_csv",
+                        help="Path to the .csv file, that contains the paths to the images of the politicians that are being used as reference for classification")
+    parser.add_argument("--article_data_csv",
+                        help="Directory to the .csv containing the article data. (e.g. image path, newspaper, ...)")
+    parser.add_argument("--politician_base_dir", 
+                        help="Base directory of the politician dataset. Contains the .csv pointing to all the images")
+    parser.add_argument("--num_images",
+                        type=int,
+                        help="How many images to process (For e.g. debugging.)",
+                        default=None
+                        )
 
     return parser.parse_args()
 
@@ -27,18 +35,20 @@ def process(
     articles_csv_path: str,
     politician_base_dir = 'politicians' ,
     batch_size = 64,
+    process_n_imgs=None
 ):
     rename_files(politician_base_dir)
     art_df = pd.read_csv(articles_csv_path)
-
     # validate columns
     assert all(c in art_df.columns for c in ['date', 'image_path', 'newspaper']) , 'not all columns present'
 
     # init results
     results = []
     columns = ['name', 'surname', 'confidence', 'distance', 'date', 'article', 'newspaper', 'dominant_emotion']
+    
+    n_samples = len(art_df) if process_n_imgs is None else process_n_imgs
 
-    for i in tqdm(range(len(art_df))):
+    for i in tqdm(range(n_samples)):
 
         # get article infos
         article = art_df.iloc[i]
@@ -89,5 +99,6 @@ if __name__ == "__main__":
         emotion_model,
         recognition_model,
         article_csv,
-        politician_base_dir= args.politician_base_dir #"politicians"
+        politician_base_dir= args.politician_base_dir,
+        process_n_imgs=args.num_images
     )
