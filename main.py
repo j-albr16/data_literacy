@@ -25,7 +25,7 @@ def process(
     emotion_model: EmotionModel, 
     recognition_model: RecognitionModel,
     articles_csv_path: str,
-    politician_base_dir = 'party_members' ,
+    politician_base_dir = 'politicians' ,
     batch_size = 64,
 ):
     rename_files(politician_base_dir)
