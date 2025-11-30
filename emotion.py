@@ -19,7 +19,10 @@ class EmotionModel(ABC):
 class DeepFaceEmotionModel(EmotionModel):
 
     def __call__(self, img_path: str) -> Tuple[str, dict]:
-        result = DeepFace.analyze(img_path, actions=['emotion'], enforce_detection=False, detector_backend="retinaface")
+        result = DeepFace.analyze(img_path, actions=['emotion'], 
+                                  enforce_detection=True, 
+                                  detector_backend="retinaface"
+                                  )
 
         assert result, 'no result'
         assert len(result) > 0, 'empty result'
@@ -27,6 +30,7 @@ class DeepFaceEmotionModel(EmotionModel):
         entry = result[0]
 
         return str(entry['dominant_emotion']), dict(entry['emotion'])
+
 
 
 
