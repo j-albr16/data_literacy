@@ -1,3 +1,4 @@
+import pandas as pd
 import os
 
 def normalize_filename(filename):
@@ -10,7 +11,8 @@ def normalize_filename(filename):
     replacements = {
         'ä': 'ae', 'ö': 'oe', 'ü': 'ue',
         'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue',
-        'ß': 'ss'
+        'ß': 'ss', 'ğ': 'g', 'ć': 'c', 
+        'ç':'c', 'é':'e', 'é': 'e'
     }
     for old, new in replacements.items():
         filename = filename.replace(old, new)
