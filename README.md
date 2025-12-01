@@ -2,9 +2,33 @@
 ## Analysing Politicians Facial Expressions
 ![Trump](assets/trump.jpg)
 
+## Use Pre-Commit for iPyNotebooks
+### Installation
+- Install the requirements (or `pip install pre-commit`)
+- Execute **once** `pre-commit install`
+### When Commiting
+Assuming you do:
 
+```bash
+($ git add nb.ipynb) // optional
+$ git commit -m "update nb" nb.ipynb
 ```
 
+If you changed the .ipynb file you will see:
+
+```bash
+nbstripout...............................................................Failed
+- hook id: nbstripout
+- files were modified by this hook
+```
+
+After that `add` and `commit` the `.ipynb` again:
+```bash
+$ git add nb.ipynb
+$ git commit -m "msg" nb.ipynb
+```
+
+```
 .
 ├── assets
 │   └── trump.jpg
