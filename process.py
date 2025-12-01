@@ -1,31 +1,28 @@
-import os
-import tensorflow as tf
-# tf.config.set_visible_devices([], 'GPU')
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
 import argparse
+
 import pandas as pd
 from tqdm import tqdm
-
-from emotion import EmotionModel, DeepFaceEmotionModel
-from recognition import RecognitionModel, DeepFaceModel
-from utils import rename_files
+import os
 from argparse import ArgumentParser
+
+from models.emotion import EmotionModel, DeepFaceEmotionModel
+from models.recognition import RecognitionModel, DeepFaceModel
+
 
 def get_args():
     parser = ArgumentParser()
     parser.add_argument("--politician_reference_csv",
-                        help="Path to the .csv file, that contains the paths to the images of the politicians that are being used as reference for classification")
+                        help="Path to the .csv file, that contains the paths to the images of the politicians that are being used as reference for classification", default='politicians/data.csv')
     parser.add_argument("--article_data_csv",
-                        help="Directory to the .csv containing the article data. (e.g. image path, newspaper, ...)")
+                        help="Directory to the .csv containing the article data. (e.g. image path, newspaper, ...)", default='politician_data_set/politicians.csv')
     parser.add_argument("--politician_base_dir", 
                         help="Base directory of the politician dataset. Contains the .csv pointing to all the images")
     parser.add_argument("--num_images",
                         type=int,
                         help="How many images to process (For e.g. debugging.)",
-                        default=-1
-                        )
-    parser.add_argument("--start", type=int)
+                        default=100)
+    parser.add_argument("--data_dir", type=str, default='data')
+    parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--out_name", type=str, required=False, default="out.csv")
     parser.add_argument("--omit_tqdm", action="store_true", default=True)
     return parser.parse_args()
@@ -53,6 +50,8 @@ def init_results(out_path):
         return []
 
 
+
+
 def process(
     emotion_model: EmotionModel, 
     recognition_model: RecognitionModel,
@@ -60,40 +59,45 @@ def process(
     omit_tqdm=True,
     start=0,
     end=-1,
-    politician_base_dir = 'politicians' ,
     out_name="out.csv",
     batch_size = 64,
+    data_dir = 'data',
 ):
-    rename_files(politician_base_dir)
     art_df = pd.read_csv(articles_csv_path)
+    out_path = os.path.join(data_dir, 'out.csv')
+
     # validate columns
     assert all(c in art_df.columns for c in ['date', 'image_path', 'newspaper']) , 'not all columns present'
-    
-    art_df = subsample_df(df=art_df, start=start, end=end)
 
     # init results
+    art_df = subsample_df(df=art_df, start=start, end=end)
     results = init_results(out_name)
     columns = ['name', 'surname', 'confidence', 'distance', 'date', 'article', 'newspaper', 'dominant_emotion']
-    
+
     print("*","="*80,"*")
     print(f"Starting recognition/emotion detection for {len(art_df)} images.")
     print(f"\t☺ From: {start} to {end}.")
     print(f"\t☺ Saving out to: {out_name} - Please make sure the dir exist (else crash).")
     print("*","="*80,"*")
+
+
     iterator = tqdm(range(len(art_df))) if not omit_tqdm else range(len(art_df))
+
     for i in iterator:
 
         # get article infos
         article = art_df.iloc[i]
-        image_path = article['image_path']
+        image_path = os.path.join(data_dir, article['image_path'])
         date = article['date']
         newspaper = article['newspaper']
+
         # find politician
         try:
-            name, surname, confidence, distance = recognition_model(image_path)
+            name, surname, distance, confidence = recognition_model(image_path)
         except Exception as e:
-            print(f'failed to detect face in  {image_path}: {e}')
+            print(f'failed to detect face in {image_path}: {e}')
             continue
+
         try:
             dominant_emotion, emotions = emotion_model(image_path)
         except Exception as e:
@@ -112,23 +116,25 @@ def process(
 
         if i % batch_size == 0:
             result = pd.DataFrame(results, columns=columns)
-            result.to_csv(out_name, index=False)
+            result.to_csv(out_path)
 
 
     result = pd.DataFrame(results, columns=columns)
-    result.to_csv(out_name, index=False)
+    result.to_csv(out_path)
     print(result.info())
-    print(result)
    
 
 
 if __name__ == "__main__":
     emotion_model = DeepFaceEmotionModel()
     args = get_args()
-    recognition_model = DeepFaceModel(args.politician_reference_csv)
-    article_csv = args.article_data_csv
+    data_dir = args.data_dir
+    recognition_model = DeepFaceModel(os.path.join(data_dir, args.politician_reference_csv), data_dir)
+    article_csv = os.path.join(data_dir, args.article_data_csv)
 
     end = -1 if args.num_images < 0 else (args.start + args.num_images)
+
+
     process(
         emotion_model,
         recognition_model,
@@ -136,6 +142,6 @@ if __name__ == "__main__":
         start=args.start,
         end=end,
         omit_tqdm=args.omit_tqdm,
-        politician_base_dir= args.politician_base_dir,
         out_name=args.out_name,
+        data_dir=data_dir
     )

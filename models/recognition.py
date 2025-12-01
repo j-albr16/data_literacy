@@ -1,3 +1,4 @@
+import os
 from abc import ABC, abstractclassmethod, abstractmethod
 from typing import List, Sequence, Tuple
 
@@ -5,7 +6,7 @@ import numpy as np
 import pandas as pd
 from deepface import DeepFace
 
-from utils import normalize_filename
+# from utils import normalize_filename
 
 
 class RecognitionModel(ABC):
@@ -32,12 +33,14 @@ class RecognitionModel(ABC):
 
 class DeepFaceModel(RecognitionModel):
 
-    def __init__(self, csv_path: str) -> None:
+    def __init__(self, csv_path: str, data_dir: str) -> None:
         self.df = pd.read_csv(csv_path)
         assert self._is_correct(self.df), f'csv does not contain required columns'
 
-        self.db_path = self.df.iloc[0]["image_path"].split('/')[0]
-        self.df['image_path'] = self.df['image_path'].apply(normalize_filename)
+        # append data dir to image paths
+        self.db_path = os.path.join(data_dir, self.df.iloc[0]["image_path"].split('/')[0])
+        self.df["image_path"] = self.df["image_path"].apply(lambda p: os.path.join(data_dir, p))
+        # self.df['image_path'] = self.df['image_path'].apply(normalize_filename)
 
     def __call__(
             self,
@@ -48,7 +51,7 @@ class DeepFaceModel(RecognitionModel):
     ) -> Tuple[str, str, float, float]:
         dfs: List[pd.DataFrame] = DeepFace.find(img_path = img_path,
                                                 db_path=self.db_path,
-                                                detector_backend="retinaface")
+                                                detector_backend="retinaface",)
 
         assert len(dfs) > 0, 'no result'
         detected_persons = []
