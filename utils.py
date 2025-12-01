@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from argparse import ArgumentParser
 
 def normalize_filename(filename):
     """Replace German umlauts with ASCII equivalents"""
@@ -34,3 +35,22 @@ def rename_files(base_dir='party_members'):
             os.rename(old_path, new_path)
 
 
+
+
+def get_process_args():
+    parser = ArgumentParser()
+    parser.add_argument("--politician_reference_csv",
+                        help="Path to the .csv file, that contains the paths to the images of the politicians that are being used as reference for classification", default='politicians/data.csv')
+    parser.add_argument("--article_data_csv",
+                        help="Directory to the .csv containing the article data. (e.g. image path, newspaper, ...)", default='politician_data_set/politicians.csv')
+    parser.add_argument("--politician_base_dir", 
+                        help="Base directory of the politician dataset. Contains the .csv pointing to all the images")
+    parser.add_argument("--num_images",
+                        type=int,
+                        help="How many images to process (For e.g. debugging.)",
+                        default=-1)
+    parser.add_argument("--data_dir", type=str, default='data')
+    parser.add_argument("--start", type=int, default=0)
+    parser.add_argument("--out_name", type=str, required=False, default="out.csv")
+    parser.add_argument("--omit_tqdm", action="store_true", default=False)
+    return parser.parse_args()

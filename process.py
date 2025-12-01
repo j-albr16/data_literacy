@@ -2,34 +2,17 @@ import pandas as pd
 from tqdm import tqdm
 import os
 from argparse import ArgumentParser
+from utils import get_process_args
 
 from models.emotion import EmotionModel, DeepFaceEmotionModel
 from models.recognition import RecognitionModel, DeepFaceModel
 
 
-def get_args():
-    parser = ArgumentParser()
-    parser.add_argument("--politician_reference_csv",
-                        help="Path to the .csv file, that contains the paths to the images of the politicians that are being used as reference for classification", default='politicians/data.csv')
-    parser.add_argument("--article_data_csv",
-                        help="Directory to the .csv containing the article data. (e.g. image path, newspaper, ...)", default='politician_data_set/politicians.csv')
-    parser.add_argument("--politician_base_dir", 
-                        help="Base directory of the politician dataset. Contains the .csv pointing to all the images")
-    parser.add_argument("--num_images",
-                        type=int,
-                        help="How many images to process (For e.g. debugging.)",
-                        default=100)
-    parser.add_argument("--data_dir", type=str, default='data')
-    parser.add_argument("--start", type=int, default=0)
-    parser.add_argument("--out_name", type=str, required=False, default="out.csv")
-    parser.add_argument("--omit_tqdm", action="store_true", default=False)
-    return parser.parse_args()
-
 def subsample_df(df: pd.DataFrame, start, end):
-    if end <= start:
-        raise ValueError("Invalid value for end.")
-    elif end < 0 or end > len(df):
+    if  end < 0 or end > len(df):
         end = len(df)
+    elif end <= start:
+        raise ValueError("Invalid value for end.")
 
     return df.iloc[start:end]
 
@@ -40,14 +23,12 @@ def init_results(out_path):
     try:
         df = pd.read_csv(out_path, index_col=False)
         results = [df.iloc[i].tolist() for i in range(len(df))]
-        print(f"\t☺Loaded checkpoint file from '{out_path}'.")
+        print(f"\t☺ Loaded checkpoint file from '{out_path}'.")
         return results
 
     except FileNotFoundError:
-        print(f"\t☺Tried to read: {out_path} - could not find. Initializing empty df.")
+        print(f"\t☺ Tried to read: {out_path} - could not find. Initializing empty df.")
         return []
-
-
 
 
 def process(
@@ -69,12 +50,11 @@ def process(
 
     # init results
     art_df = subsample_df(df=art_df, start=start, end=end)
-    results = init_results(out_name)
     columns = ['name', 'surname', 'confidence', 'distance', 'date', 'article', 'newspaper', 'dominant_emotion']
 
     print("*","="*80,"*")
     print(f"Starting recognition/emotion detection for {len(art_df)} images.")
-    print(f"\t☺ From: {start} to {end}.")
+    print(f"\t☺ From: {start} to {len(art_df) if end<=0 else end}.")
     print(f"\t☺ Saving out to: {out_name} - Please make sure the dir exist (else crash).")
     results = init_results(out_name)
     print("*","="*80,"*")
@@ -86,6 +66,7 @@ def process(
 
         # get article infos
         article = art_df.iloc[i]
+        print(article.tolist())
         image_path = os.path.join(data_dir, article['image_path'])
         date = article['date']
         newspaper = article['newspaper']
@@ -126,13 +107,12 @@ def process(
 
 if __name__ == "__main__":
     emotion_model = DeepFaceEmotionModel()
-    args = get_args()
+    args = get_process_args()
     data_dir = args.data_dir
     recognition_model = DeepFaceModel(os.path.join(data_dir, args.politician_reference_csv), data_dir)
     article_csv = os.path.join(data_dir, args.article_data_csv)
 
     end = -1 if args.num_images < 0 else (args.start + args.num_images)
-
 
     process(
         emotion_model,
