@@ -1,9 +1,3 @@
-import os
-import tensorflow as tf
-# tf.config.set_visible_devices([], 'GPU')
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-import argparse
 import pandas as pd
 from tqdm import tqdm
 
@@ -27,7 +21,7 @@ def get_args():
                         )
     parser.add_argument("--start", type=int)
     parser.add_argument("--out_name", type=str, required=False, default="out.csv")
-    parser.add_argument("--omit_tqdm", action="store_true", default=True)
+    parser.add_argument("--omit_tqdm", action="store_true", default=False)
     return parser.parse_args()
 
 def subsample_df(df: pd.DataFrame, start, end):
@@ -45,11 +39,11 @@ def init_results(out_path):
     try:
         df = pd.read_csv(out_path, index_col=False)
         results = [df.iloc[i].tolist() for i in range(len(df))]
-        print(f"Loaded checkpoint file from '{out_path}'.")
+        print(f"\t☺Loaded checkpoint file from '{out_path}'.")
         return results
 
     except FileNotFoundError:
-        print(f"Tried to read: {out_path} - could not find. Initializing empty df.")
+        print(f"\t☺Tried to read: {out_path} - could not find. Initializing empty df.")
         return []
 
 
@@ -57,7 +51,7 @@ def process(
     emotion_model: EmotionModel, 
     recognition_model: RecognitionModel,
     articles_csv_path: str,
-    omit_tqdm=True,
+    omit_tqdm=False,
     start=0,
     end=-1,
     politician_base_dir = 'politicians' ,
@@ -72,13 +66,13 @@ def process(
     art_df = subsample_df(df=art_df, start=start, end=end)
 
     # init results
-    results = init_results(out_name)
     columns = ['name', 'surname', 'confidence', 'distance', 'date', 'article', 'newspaper', 'dominant_emotion']
     
     print("*","="*80,"*")
     print(f"Starting recognition/emotion detection for {len(art_df)} images.")
     print(f"\t☺ From: {start} to {end}.")
     print(f"\t☺ Saving out to: {out_name} - Please make sure the dir exist (else crash).")
+    results = init_results(out_name)
     print("*","="*80,"*")
     iterator = tqdm(range(len(art_df))) if not omit_tqdm else range(len(art_df))
     for i in iterator:
@@ -117,9 +111,8 @@ def process(
 
     result = pd.DataFrame(results, columns=columns)
     result.to_csv(out_name, index=False)
-    print(result.info())
     print(result)
-   
+    print(f"Finished at index {end}") 
 
 
 if __name__ == "__main__":
