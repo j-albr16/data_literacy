@@ -28,6 +28,7 @@ $ git add nb.ipynb
 $ git commit -m "msg" nb.ipynb
 ```
 
+## (Suggested) Repository Structure
 ```
 .
 ├── assets
