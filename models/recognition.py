@@ -2,6 +2,7 @@ import os
 from abc import ABC, abstractclassmethod, abstractmethod
 from typing import List, Sequence, Tuple
 
+from matplotlib.pylab import ndarray
 import numpy as np
 import pandas as pd
 from deepface import DeepFace
@@ -33,8 +34,16 @@ class RecognitionModel(ABC):
 
 class DeepFaceModel(RecognitionModel):
 
-    def __init__(self, csv_path: str, data_dir: str) -> None:
+    def __init__(self, 
+                 csv_path: str, 
+                 data_dir: str, 
+                 silent=False,
+                 detector_backend="retinaface",
+                 model_name="VGG-Face") -> None:
         self.df = pd.read_csv(csv_path)
+        self.silent = silent
+        self.detector_backend = detector_backend
+        self.model_name = model_name
         assert self._is_correct(self.df), f'csv does not contain required columns'
 
         # append data dir to image paths
@@ -44,14 +53,16 @@ class DeepFaceModel(RecognitionModel):
 
     def __call__(
             self,
-            img_path: str,
+            img_path: str | ndarray,
             k = 5,
             confidence_threshold = 0.,
             distance_threshold = float('inf')
     ) -> Tuple[str, str, float, float]:
         dfs: List[pd.DataFrame] = DeepFace.find(img_path = img_path,
+                                                model_name=self.model_name,
                                                 db_path=self.db_path,
-                                                detector_backend="retinaface",)
+                                                detector_backend=self.detector_backend,
+                                                silent=self.silent)
 
         assert len(dfs) > 0, 'no result'
         detected_persons = []

@@ -108,7 +108,10 @@ if __name__ == "__main__":
     emotion_model = DeepFaceEmotionModel()
     args = get_process_args()
     data_dir = args.data_dir
-    recognition_model = DeepFaceModel(os.path.join(data_dir, args.politician_reference_csv), data_dir)
+    recognition_model = DeepFaceModel(
+            csv_path=os.path.join(data_dir, args.politician_reference_csv), 
+            data_dir=data_dir,
+            detector_backend="retinaface")
     article_csv = os.path.join(data_dir, args.article_data_csv)
 
     end = -1 if args.num_images < 0 else (args.start + args.num_images)
