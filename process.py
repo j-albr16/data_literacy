@@ -66,7 +66,6 @@ def process(
 
         # get article infos
         article = art_df.iloc[i]
-        print(article.tolist())
         image_path = os.path.join(data_dir, article['image_path'])
         date = article['date']
         newspaper = article['newspaper']
