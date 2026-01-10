@@ -145,6 +145,6 @@ def radar(
 
 if __name__ == "__main__":
     path = '/home/scrutycs/uni/data_literacy/politicians/data/politicians_results.csv'
-    politicians = ['merz', 'merkel', 'trump', 'putin']
+    politicians = ['habeck', 'xi', 'weidel', 'merz', 'merkel', 'trump', 'putin']
     radar(path, surnames=politicians)
 
