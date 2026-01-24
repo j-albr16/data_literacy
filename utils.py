@@ -2,6 +2,15 @@ import pandas as pd
 import os
 from argparse import ArgumentParser
 
+def add_bins(bins):
+    def bin_value(value):
+        for i, bin in enumerate(bins):
+            if value <=bin:
+                return i
+
+        return len(bins)
+    return bin_value
+
 def normalize_filename(filename):
     """Replace German umlauts with ASCII equivalents"""
     import unicodedata

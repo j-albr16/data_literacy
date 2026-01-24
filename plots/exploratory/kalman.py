@@ -2,8 +2,8 @@ import jax.numpy as jnp
 from jax import jit
 import jax
 
-Q_FACTOR = 1e3
-R_FACTOR = 1e4
+Q_FACTOR = 8e-1
+R_FACTOR = 2e1
 
 def KalmanFilter(A, Q, H, R):
     @jit
@@ -39,9 +39,16 @@ def smooth(emotion_logits, std_logits, days):
     # std_logits = jnp.sqrt(jnp.clip(jnp.log(std_logits), min=0))
     dim = emotion_logits.shape[1]
     A = jnp.eye(dim)
-    Q = lambda delta_t, std: jnp.clip(std, min=1e-3, max=100) * Q_FACTOR * delta_t * jnp.eye(dim)
+    use_std = True
+    if use_std == True:
+        Q = lambda delta_t, std: (jnp.clip(std, min=5e-2, max=5e1)) * Q_FACTOR * delta_t * jnp.eye(dim)
+        # R = lambda delta_t, std: jnp.clip(std, min=5e-2, max=5e1) * delta_t * R_FACTOR * jnp.eye(dim)
+        R = lambda delta_t, std: delta_t * R_FACTOR * jnp.eye(dim)
+    else:
+        Q = lambda delta_t, std:  Q_FACTOR * delta_t * jnp.eye(dim)
+        R = lambda delta_t, std:  delta_t * R_FACTOR * jnp.eye(dim)
+
     H = jnp.eye(dim) 
-    R = lambda delta_t, std: jnp.clip(std, min=1e-3, max=100) * delta_t * R_FACTOR * jnp.eye(dim)
 
     predict, update, smooth = KalmanFilter(A, Q, H, R)
     m0 = jnp.ones(dim) / dim      # uniform emotions prior
