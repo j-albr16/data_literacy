@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from jax import jit
+from kalman import KalmanFilter, smooth
 from tueplots import bundles, cycler, figsizes
 from tueplots.constants.color import palettes
 
 from utils import add_datetime
-from kalman import smooth, KalmanFilter
 
 plt.rcParams.update(bundles.icml2022())
 plt.rcParams.update(figsizes.icml2022_full())
@@ -17,13 +17,24 @@ plt.rcParams.update({"figure.dpi": 350})
 
 def timeline(
         path,
-        surname = 'merkel',
-        emotion = 'disgust',
-        events = [('2025-10-14', 'Stadtbild Debate'), ('2025-02-23', 'Federal Elections'), ('2025-05-06', 'Chancelor Elections')],
-        newspaper = 'all',
+        surname,
+        events = [
+        ('2025-02-23', 'Federal Elections'),
+        ('2025-05-06', 'Chancelor Elections'),
+    ("2022-02-24", "Invasion"),
+    ("2024-09-06", "Collapse Ampel"),
+    ("2022-09-21", "Mobilization"),
+    ("2021-09-26", "Federal Elections"),
+    ("2023-06-23", "Wagner Mutiny"),
+    ("2023-11-25", "Potsdam Far Right Meeting"),
+    ("2025-10-20", "Stadtbild Debate"),
+    ("2023-10-07", "Hamas Israel Breach"),
+                  ],
+        newspaper = 'sz',
 ):
     all_emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
     df = pd.read_csv(path)
+    df = df[df['confidence'] > 75]
     df = add_datetime(df)
 
     if newspaper != 'all':
@@ -63,11 +74,8 @@ def timeline(
     print("std_logits:", std_profile.shape, "has NaN:", jnp.isnan(std_profile).any())
     # smooth_means, smooth_covs = emotion_logits, std_logits
     smooth_means, smooth_covs = smooth(mean_profile, std_profile, days)
-    # smooth_covs = emotion_logits
 
-    emotion_index = all_emotions.index(emotion)
-
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize= (8,6))
+    fig, ax1 = plt.subplots()
 
     # Get mean and standard deviation for the emotion
     # mean = smooth_means[:, emotion_index]
@@ -86,21 +94,20 @@ def timeline(
     tick_labels = [date.strftime('%Y-%m-%d') for date in tick_dates]
 
     # Apply tick settings to both axes
-    for ax in [ax1, ax2]:
-        ax.set_xticks(tick_positions)
-        ax.set_xticklabels(tick_labels, rotation=45, ha='right')
-        ax.set_xlabel('Date')
+    ax1.set_xticks(tick_positions)
+    ax1.set_xticklabels(tick_labels, rotation=45, ha='right')
+    ax1.set_xlabel('Date')
 
     # Plot the mean line
-    for i, emotion in enumerate(all_emotions):
+    for i, emotion in enumerate(['happy', 'angry', 'fear', 'neutral']):
+        i = all_emotions.index(emotion)
         ax1.plot(days, mean[:, i], label = emotion)
-        ax2.plot(days, mean_profile[:, i], label = emotion)
-        # ax1.fill_between(
-        #         days,
-        #     mean[:, i] - 0.05 * std[:, i],
-        #     mean[:, i] + 0.05 * std[:, i],
-        #         alpha=0.3
-        #     )
+        ax1.fill_between(
+                days,
+                mean[:, i] - 0.05 * std[:, i],
+                mean[:, i] + 0.05 * std[:, i],
+                alpha=0.2
+            )
         
         # ax2.fill_between(
         #     days,
@@ -108,8 +115,7 @@ def timeline(
         #     emotion_logits[:, emotion_index] + std_logits[:, emotion_index],
         #     alpha=0.3
         # )
-    ax1.legend()
-    ax2.legend()
+    ax1.legend(loc='upper left')
 
     # Add event markers
     for event_date, event_label in events:
@@ -119,25 +125,18 @@ def timeline(
         event_days = int((event_datetime - min_date_naive).total_seconds() / 86400)
 
         # Add vertical line on both axes
-        for ax in [ax1, ax2]:
-            ax.axvline(event_days, color='red', linestyle='--', alpha=0.7, linewidth=1)
-            ax.text(event_days, ax.get_ylim()[1], event_label,
-                   rotation=90, verticalalignment='top',
-                   horizontalalignment='right', fontsize=8)
+        ax1.axvline(event_days, color='red', linestyle='--', alpha=0.7, linewidth=1)
+        ax1.text(event_days, ax1.get_ylim()[1], event_label,
+               rotation=90, verticalalignment='top',
+               horizontalalignment='right', fontsize=8)
 
     # Add shading for the covariance (mean ± std)
-
-    ax1.set_title('smoothed')
-    ax2.set_title('raw')
-
-    fig.suptitle(f'{surname} Emotions')
-    plt.show()
-    # plt.savefig(f'{surname}_emotions.png', dpi=300)
+    plt.savefig(f'{surname}_emotions.pdf')
 
 
 
 if __name__ == "__main__":
 
-    path = '/home/scrutycs/uni/data_literacy/politicians/data/politicians_results.csv'
+    path = '/home/scrutycs/uni/data_literacy/politicians/data/timeline.csv'
     politicians = ['merz', 'merkel', 'trump', 'putin']
     timeline(path, surname='merz')

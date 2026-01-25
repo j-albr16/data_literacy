@@ -16,7 +16,10 @@ B = 1000
 
 def main(
     path,
+    newspaper = 'freitag',
+    party = 'all'
 ):
+    print(party, newspaper)
 
     # get all parties that
     df = pd.read_csv(path)
@@ -27,103 +30,97 @@ def main(
     emotions = emotions / np.sum(emotions, axis=-1, keepdims=True)
     df['happy'] = emotions[:, all_emotions.index('happy')]
 
-
-    females = ['weidel', 'merkel', 'brantner', 'baerbock', 'von storch', 'lang', 'schwerdtner', 'reichinnek', 'bas']
-    df['gender'] = 'male'
-    df['party'] = 'test'
-    df.loc[df['surname'].isin(females), 'gender'] = 'female'
-
-    # get parties that contain male an female politicians
-    parties = df.groupby('party')['gender'].nunique()
-    complete_parties = parties[parties > 1]
-
     rng = np.random.default_rng(42)
 
-    fig, axs = plt.subplots(len(complete_parties), 2, figsize=(15, 5))
+    fig, axs = plt.subplots(1, 2, figsize=(15, 5))
 
-    # Handle case where there's only one party (axs will be a single Axes, not an array)
-    if len(complete_parties) == 1:
-        axs = np.array([axs])
+    if newspaper != 'all':
+        df = df[df['newspaper'] == newspaper]
 
-    for idx, party in enumerate(complete_parties.index):
-        df_ = df[df['party'] == party][['gender', 'happy']]
-        X = df_['happy'].to_numpy()
-        is_male = (df_['gender'] == 'male').to_numpy()
+    if party != 'all':
+        df = df[df['party'] == party]
 
-        def t_mean(happiness_values):
-            return np.mean(happiness_values[is_male]) - np.mean(happiness_values[~is_male])
+    assert len(df) > 0, f'nespaper={newspaper}, party={party}'
 
-        def t_top(happiness_values):
-            return np.min(happiness_values[is_male]) - np.min(happiness_values[~is_male])
+    df_ = df[['gender', 'happy']]
+    X = df_['happy'].to_numpy()
+    is_male = (df_['gender'] == 'male').to_numpy()
 
-        sorting = np.argsort(X)
-        def t_proportions(group, k):
-            top_k = sorting[:k]
-            return np.sum(group[top_k]) / k
+    def t_mean(happiness_values):
+        return np.mean(happiness_values[is_male]) - np.mean(happiness_values[~is_male])
 
-        X_permuted = rng.permuted(np.tile(X, (B,1)), axis=1)
+    def t_top(happiness_values):
+        return np.min(happiness_values[is_male]) - np.min(happiness_values[~is_male])
 
-        # Test 1: Mean difference
-        mean_true = t_mean(X)
-        mean_dist = np.apply_along_axis(t_mean, 1, X_permuted)
-        p_value_mean = np.sum(np.abs(mean_dist) >= np.abs(mean_true)) / B
+    sorting = np.argsort(X)
+    def t_proportions(group, k):
+        top_k = sorting[:k]
+        return np.sum(group[top_k]) / k
 
-        axs[idx, 0].hist(mean_dist, bins=50, alpha=0.7, edgecolor='black')
-        axs[idx, 0].axvline(mean_true, color='red', linestyle='--', alpha=0.7, linewidth=2, label=f'Obs (p={p_value_mean:.4f})')
-        axs[idx, 0].set_title(f'{party} - Mean Diff')
-        axs[idx, 0].set_xlabel('Mean Difference (M - F)')
-        axs[idx, 0].set_ylabel('Frequency')
-        axs[idx, 0].legend(fontsize=8)
+    X_permuted = rng.permuted(np.tile(X, (B,1)), axis=1)
 
-        # Scatter plot showing happiness distribution by gender
-        rng_scatter = np.random.default_rng(42)
-        y = rng_scatter.normal(loc=0.5, scale=0.1, size=X.shape)
+    # Test 1: Mean difference
+    mean_true = t_mean(X)
+    mean_dist = np.apply_along_axis(t_mean, 1, X_permuted)
+    p_value_mean = np.sum(np.abs(mean_dist) >= np.abs(mean_true)) / B
 
-        # calculate male and female cdf
-        cdf_x = np.linspace(0, 1, 1000)
-        males = X[is_male]
-        females = X[~is_male]
-        male_cdf = np.array([len(males[males < x]) / len(males) for x in cdf_x])
-        female_cdf = np.array([len(females[females < x]) / len(females) for x in cdf_x])
-        epsilon_male = np.sqrt((1/(2*len(males))) * np.log(2 / 0.05) )
-        epsilon_female = np.sqrt((1/(2*len(females))) * np.log(2 / 0.05) )
+    axs[0].hist(mean_dist, bins=50, alpha=0.7, edgecolor='black')
+    axs[0].axvline(mean_true, color='red', linestyle='--', alpha=0.7, linewidth=2, label=f'Obs (p={p_value_mean:.4f})')
+    axs[0].set_title(f'party={party} - newspaper={newspaper} - Mean Diff')
+    axs[0].set_xlabel('Mean Difference (M - F)')
+    axs[0].set_ylabel('Frequency')
+    axs[0].legend(fontsize=8)
 
+    # Scatter plot showing happiness distribution by gender
+    rng_scatter = np.random.default_rng(42)
+    y = rng_scatter.normal(loc=0.5, scale=0.1, size=X.shape)
 
-        # Use tue_plot colors for male/female
-        colors = [palettes.tue_plot[0] if male else palettes.tue_plot[3] for male in is_male]
+    # calculate male and female cdf
+    cdf_x = np.linspace(0, 1, 1000)
+    males = X[is_male]
+    females = X[~is_male]
+    male_cdf = np.array([len(males[males < x]) / len(males) for x in cdf_x])
+    female_cdf = np.array([len(females[females < x]) / len(females) for x in cdf_x])
+    epsilon_male = np.sqrt((1/(2*len(males))) * np.log(2 / 0.05) )
+    epsilon_female = np.sqrt((1/(2*len(females))) * np.log(2 / 0.05) )
 
-        axs[idx, 1].scatter(X, y, c=colors, s=10, alpha=0.6, edgecolors='none')
-        axs[idx, 1].set_title(f'{party} - Happiness Distribution')
-        axs[idx, 1].set_xlabel('Happiness')
-        axs[idx, 1].set_ylabel('CDF / Random Jitter')
-        axs[idx, 1].grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+    # Use tue_plot colors for male/female
+    colors = [palettes.tue_plot[0] if male else palettes.tue_plot[3] for male in is_male]
 
-        # Plot male CDF with confidence interval
-        axs[idx, 1].plot(cdf_x, male_cdf, color=palettes.tue_plot[3], label='Male CDF')
-        male_lower = np.clip(male_cdf - epsilon_male, 0, 1)
-        male_upper = np.clip(male_cdf + epsilon_male, 0, 1)
-        axs[idx, 1].fill_between(cdf_x, male_lower, male_upper, alpha=0.3, color=palettes.tue_plot[3])
+    axs[1].scatter(X, y, c=colors, s=10, alpha=0.6, edgecolors='none')
+    axs[1].set_title(f'party={party} - newspaper={newspaper} - Mean Diff')
+    axs[1].set_xlabel('Happiness')
+    axs[1].set_ylabel('CDF / Random Jitter')
+    axs[1].grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
-        # Plot female CDF with confidence interval
-        axs[idx, 1].plot(cdf_x, female_cdf, color=palettes.tue_plot[0], label='Female CDF')
-        female_lower = np.clip(female_cdf - epsilon_female, 0, 1)
-        female_upper = np.clip(female_cdf + epsilon_female, 0, 1)
-        axs[idx, 1].fill_between(cdf_x, female_lower, female_upper, alpha=0.3, color=palettes.tue_plot[0])
+    # Plot male CDF with confidence interval
+    axs[1].plot(cdf_x, male_cdf, color=palettes.tue_plot[3], label='Male CDF')
+    male_lower = np.clip(male_cdf - epsilon_male, 0, 1)
+    male_upper = np.clip(male_cdf + epsilon_male, 0, 1)
+    axs[1].fill_between(cdf_x, male_lower, male_upper, alpha=0.3, color=palettes.tue_plot[3])
 
-        # Add legend
-        from matplotlib.patches import Patch
-        legend_elements = [
-            Patch(facecolor=palettes.tue_plot[3], label='Male'),
-            Patch(facecolor=palettes.tue_plot[0], label='Female')
-        ]
-        axs[idx, 1].legend(handles=legend_elements, loc='best', fontsize=8)
+    # Plot female CDF with confidence interval
+    axs[1].plot(cdf_x, female_cdf, color=palettes.tue_plot[0], label='Female CDF')
+    female_lower = np.clip(female_cdf - epsilon_female, 0, 1)
+    female_upper = np.clip(female_cdf + epsilon_female, 0, 1)
+    axs[1].fill_between(cdf_x, female_lower, female_upper, alpha=0.3, color=palettes.tue_plot[0])
+
+    # Add legend
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor=palettes.tue_plot[3], label='Male'),
+        Patch(facecolor=palettes.tue_plot[0], label='Female')
+    ]
+    axs[1].legend(handles=legend_elements, loc='best', fontsize=8)
 
 
     plt.tight_layout()
-    plt.savefig('gender_bias_happyness.png', dpi=300)
-    plt.show()
+    plt.savefig(f'data/plots/gender_bias_{newspaper}_{party}_happyness.png', dpi=300)
+    # plt.show()
 
 if __name__ == "__main__":
     path = '/home/scrutycs/uni/data_literacy/politicians/data/politicians_results.csv'
-    main(path)
+    for n in ['sz', 'freitag', 'compact']:
+        for party in ['spd', 'gruenen', 'afd', 'union', 'linke']:
+            main(path, newspaper=n, party=party)
 

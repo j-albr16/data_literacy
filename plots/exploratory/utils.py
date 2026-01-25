@@ -1,6 +1,17 @@
 import pandas as pd
 
 
+def add_bins(bins):
+    def bin_value(value):
+        for i, bin in enumerate(bins):
+            if value <=bin:
+                return i
+
+        return len(bins)
+    return bin_value
+
+
+
 def parse_mixed_dates(date_series):
     """
     Parse a pandas Series with mixed date formats.
