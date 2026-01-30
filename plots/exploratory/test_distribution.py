@@ -177,8 +177,8 @@ def main(path, emotion='happy'):
     # Add legend
     from matplotlib.patches import Patch
     legend_elements = [
-        Patch(facecolor=palettes.tue_plot[0], label='age'),
-        Patch(facecolor=palettes.tue_plot[1], label='gender')
+        Patch(facecolor=palettes.tue_plot[0], label='Age'),
+        Patch(facecolor=palettes.tue_plot[1], label='Gender')
     ]
     ax.legend(handles=legend_elements, loc='best', fontsize=8)
     ax.set_yticklabels([])
@@ -191,20 +191,31 @@ def main(path, emotion='happy'):
 
     newspapers = df['newspaper'].unique()
     targets = ['Gender', 'Age']
+    
+    # Custom label map for newspaper names
+    newspaper_label_map = {
+        'sz': 'SZ',
+        'spiegel': 'Spiegel',
+        'stern': 'Stern',
+        'taz': 'Taz',
+        'compact': 'Compact',
+        'freitag': 'Freitag',
+        'nd': 'ND'
+    }
 
     plt.savefig('dist_bias_tests.pdf')
 
     fig, ax3 = plt.subplots()
 
-    results = {'age': [], 'gender': []}
+    results = {'Age': [], 'Gender': []}
     for j, n in enumerate(newspapers):
         df_ = results_gender_df
         df_ = df_[df_['newspaper'] == n]
-        results['gender'].append(df_['p_value'].mean())
+        results['Gender'].append(df_['p_value'].mean())
 
         df_ = results_age_df
         df_ = df_[df_['newspaper'] == n]
-        results['age'].append(df_['p_value'].mean())
+        results['Age'].append(df_['p_value'].mean())
 
     x = np.arange(len(newspapers)) 
     width = 0.25
@@ -218,8 +229,8 @@ def main(path, emotion='happy'):
 
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax3.set_ylabel('mean p-value')
-    ax3.set_xticks(x + width, newspapers)
+    ax3.set_ylabel('Mean p-value')
+    ax3.set_xticks(x + width, [newspaper_label_map.get(n, n.capitalize()) for n in newspapers])
     ax3.legend(loc='upper right', ncols=2)
     ax3.set_ylim(0, 1)  # P-values range from 0 to 1
     ax3.set_ylim(top=ax3.get_ylim()[1] * 1.1)
@@ -275,6 +286,7 @@ def main(path, emotion='happy'):
 
 
 if __name__ == "__main__":
-    path = '/home/scrutycs/uni/data_literacy/politicians/data/politicians_results.csv'
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(script_dir, '..', '..', 'data', 'newspaper_collection_evaluation_results_20_12_2025.csv')
     main(path)
 
