@@ -63,3 +63,6 @@ wheel==0.45.1
 wrapt==2.0.1
 matplotlib==3.10.7
 pre-commit
+jax
+tueplots
+
