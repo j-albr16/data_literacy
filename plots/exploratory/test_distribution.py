@@ -246,7 +246,7 @@ def main(path, emotion='happy'):
     fig, ax4 = plt.subplots()
 
     ax4.scatter(X, y, c=colors, s=10, alpha=0.6, edgecolors='none')
-    ax4.set_xlabel('appiness')
+    ax4.set_xlabel('Happiness')
     ax4.set_ylabel('CDF')
     ax4.grid(True, alpha=0.3)
 
