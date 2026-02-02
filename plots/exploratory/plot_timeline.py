@@ -19,28 +19,29 @@ def timeline(
         path,
         surname,
         events = [
-        ('2025-02-23', 'Federal Elections'),
-        ('2025-05-06', 'Chancelor Elections'),
-        ("2024-09-06", "Collapse Ampel"),
-        ("2025-10-20", "Stadtbild Debate"),
+            ('2025-02-23', 'Federal Elections'),
+            ('2025-05-06', 'Chancelor Elections'),
+            ("2024-09-06", "Collapse Ampel"),
+            ("2025-10-20", "Stadtbild Debate"),
         ],
         newspaper = 'sz',
 ):
     all_emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
     df = pd.read_csv(path)
+
+    # confidence at least 75%
     df = df[df['confidence'] > 75]
+
+    # add datetime
     df = add_datetime(df)
 
+    # filter newspapers
     if newspaper != 'all':
         df = df[df['newspaper'] == newspaper].reset_index(drop=True)
-
-    print(len(df), surname)
 
     # filter for the surname
     if surname != 'all':
         df = df[df['surname'] == surname].reset_index(drop=True)
-
-    print(len(df))
 
     assert len(df) > 0, 'dataframe is not empty'
 
@@ -48,25 +49,23 @@ def timeline(
     df = df.sort_values('days_since_min').reset_index(drop=True)
     min_date = pd.to_datetime(df['datetime'].iloc[0])
 
+    # get mean emotions per day. Also store the stds for smoothing
     daily_stats = df.groupby('days_since_min')[all_emotions].agg(['mean', 'std'])
     df_mean = daily_stats.xs('mean', axis=1, level=1)
     df_std = daily_stats.xs('std', axis=1, level=1).fillna(1)
 
-    # Handle NaN and zero values to prevent log(0) = -inf
+    # handle NaN and zero
     df_mean = df_mean.fillna(1e-10)  # Replace NaN with small value
     df_mean = df_mean.clip(lower=1e-10)  # Ensure no zeros
 
     days = df_mean.index.to_numpy()
 
-    # smooth over all the emotions
+    # get numpy emotions and stds
     mean_profile = df_mean[all_emotions].to_numpy()
-    mean_profile = mean_profile / np.sum(mean_profile, axis=-1, keepdims=True)
+    mean_profile = np.log(mean_profile / np.sum(mean_profile, axis=-1, keepdims=True))
     std_profile = df_std[all_emotions].to_numpy()
-    # std_profile = std_profile / np.sum(std_profile, axis=-1, keepdims=True)
 
-    print("emotion_logits:", mean_profile.shape, "has NaN:", jnp.isnan(mean_profile).any(), "has inf:", jnp.isinf(mean_profile).any())
-    print("std_logits:", std_profile.shape, "has NaN:", jnp.isnan(std_profile).any())
-    # smooth_means, smooth_covs = emotion_logits, std_logits
+    # smooth
     smooth_means, smooth_covs = smooth(mean_profile, std_profile, days)
 
     fig, ax1 = plt.subplots()
@@ -102,8 +101,8 @@ def timeline(
         ax1.plot(days, mean[:, i], label = emotion, linewidth=0.9, alpha=0.9)
         ax1.fill_between(
                 days,
-                mean[:, i] - 0.05 * std[:, i],
-                mean[:, i] + 0.05 * std[:, i],
+                mean[:, i] - 0.15 * std[:, i],
+                mean[:, i] + 0.15 * std[:, i],
                 alpha=0.2
             )
     ax1.legend(loc='upper left')
@@ -121,7 +120,7 @@ def timeline(
                rotation=90, verticalalignment='top',
                horizontalalignment='right', fontsize=8)
 
-    # Add shading for the covariance (mean ± std)
+    print('storing result')
     plt.savefig(f'{surname}_emotions.pdf')
 
 
