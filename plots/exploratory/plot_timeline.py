@@ -21,7 +21,7 @@ def timeline(
         surname,
         events = [
             ('2025-02-23', 'Federal Elections'),
-            ('2025-05-06', 'Chancelor Elections'),
+            ('2025-05-06', 'Chancellor Elections'),
             ("2024-09-06", "Collapse Ampel"),
             ("2025-10-20", "Stadtbild Debate"),
         ],
@@ -93,13 +93,13 @@ def timeline(
 
     # Apply tick settings to both axes
     ax1.set_xticks(tick_positions)
-    ax1.set_xticklabels(tick_labels, rotation=45, ha='right')
+    ax1.set_xticklabels(tick_labels, rotation=25, ha='right')
     ax1.set_xlabel('Date')
 
     # Plot the mean line
     for i, emotion in enumerate(['happy', 'angry', 'fear', 'neutral']):
         i = all_emotions.index(emotion)
-        ax1.plot(days, mean[:, i], label = emotion, linewidth=0.9, alpha=0.9)
+        ax1.plot(days, mean[:, i], label = emotion.capitalize(), linewidth=0.9, alpha=0.9)
         ax1.fill_between(
                 days,
                 mean[:, i] - 0.15 * std[:, i],
