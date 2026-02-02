@@ -10,10 +10,10 @@ from tueplots.constants.color import palettes
 
 from utils import add_datetime
 
-plt.rcParams.update(bundles.icml2022())
-plt.rcParams.update(figsizes.icml2022_full())
+plt.rcParams.update(figsizes.icml2024_full())
 plt.rcParams.update(cycler.cycler(color=palettes.tue_plot))
 plt.rcParams.update({"figure.dpi": 350})
+plt.rcParams.update(bundles.icml2024(column='half'))
 
 def timeline(
         path,
@@ -21,15 +21,9 @@ def timeline(
         events = [
         ('2025-02-23', 'Federal Elections'),
         ('2025-05-06', 'Chancelor Elections'),
-    ("2022-02-24", "Invasion"),
-    ("2024-09-06", "Collapse Ampel"),
-    ("2022-09-21", "Mobilization"),
-    ("2021-09-26", "Federal Elections"),
-    ("2023-06-23", "Wagner Mutiny"),
-    ("2023-11-25", "Potsdam Far Right Meeting"),
-    ("2025-10-20", "Stadtbild Debate"),
-    ("2023-10-07", "Hamas Israel Breach"),
-                  ],
+        ("2024-09-06", "Collapse Ampel"),
+        ("2025-10-20", "Stadtbild Debate"),
+        ],
         newspaper = 'sz',
 ):
     all_emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
@@ -87,7 +81,11 @@ def timeline(
 
     # Set x-axis ticks every 60 days, but show as dates
     max_days = max(days)
-    tick_positions = np.arange(0, max_days + 1, 60)
+    days_offset = 230
+    tick_positions = np.arange(days_offset, max_days + 1, 150)
+    days = days[days_offset:]
+    mean = mean[days_offset:, :]
+    std = std[days_offset:, :]
 
     # Convert tick positions (days) back to dates
     tick_dates = [min_date + pd.Timedelta(days=int(d)) for d in tick_positions]
@@ -101,20 +99,13 @@ def timeline(
     # Plot the mean line
     for i, emotion in enumerate(['happy', 'angry', 'fear', 'neutral']):
         i = all_emotions.index(emotion)
-        ax1.plot(days, mean[:, i], label = emotion)
+        ax1.plot(days, mean[:, i], label = emotion, linewidth=0.9, alpha=0.9)
         ax1.fill_between(
                 days,
                 mean[:, i] - 0.05 * std[:, i],
                 mean[:, i] + 0.05 * std[:, i],
                 alpha=0.2
             )
-        
-        # ax2.fill_between(
-        #     days,
-        #     emotion_logits[:, emotion_index] - std_logits[:, emotion_index],
-        #     emotion_logits[:, emotion_index] + std_logits[:, emotion_index],
-        #     alpha=0.3
-        # )
     ax1.legend(loc='upper left')
 
     # Add event markers

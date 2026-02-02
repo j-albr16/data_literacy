@@ -13,10 +13,11 @@ from tueplots.constants.color import palettes
 
 from utils import add_bins
 
-plt.rcParams.update(bundles.icml2024())
 plt.rcParams.update(figsizes.icml2024_full())
 plt.rcParams.update(cycler.cycler(color=palettes.tue_plot))
 plt.rcParams.update({"figure.dpi": 350})
+plt.rcParams.update(bundles.icml2024(column='half'))
+
 
 B = 1000
 
@@ -160,27 +161,61 @@ def main(path, emotion='happy'):
 
 
     # plot the results
-    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig, ax = plt.subplots()
+    # fig, ax1 = plt.subplots()
+
+    rng = np.random.default_rng(42)
+    pvalue_age = results_age_df['p_value'].to_numpy()
+    pvalue_gender = results_gender_df['p_value'].to_numpy()
+
+    y_age = rng.normal(loc=0.5, scale=0.1, size=pvalue_age.shape)
+    y_gender = rng.normal(loc=-0.5, scale=0.1, size=pvalue_gender.shape)
+    ax.scatter(pvalue_age, y_age, c=palettes.tue_plot[0], s=10, alpha=0.6, edgecolors='none')
+    ax.axvline(x=0.05, color=palettes.tue_plot[1], linestyle='--', linewidth=1, label=f'p-value: 0.05')
+    ax.scatter(pvalue_gender, y_gender, c=palettes.tue_plot[1],  s=10, alpha=0.6, edgecolors='none')
+    ax.grid()
+    # Add legend
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor=palettes.tue_plot[0], label='Age'),
+        Patch(facecolor=palettes.tue_plot[1], label='Gender')
+    ]
+    ax.legend(handles=legend_elements, loc='best', fontsize=8)
+    ax.set_yticklabels([])
+    ax.set_yticks([])
+    ax.set_xlabel('p-value')
+    plt.savefig('p_value_distr.pdf')
     
-    plot(ax1, results_gender_df, 'Gender Bias Test')
-    plot(ax2, results_age_df, 'Age Bias Test')
+    # plot(ax1, results_gender_df, 'Gender Bias Test')
+    # plot(ax2, results_age_df, 'Age Bias Test')
 
     newspapers = df['newspaper'].unique()
     targets = ['Gender', 'Age']
+    
+    # Custom label map for newspaper names
+    newspaper_label_map = {
+        'sz': 'SZ',
+        'spiegel': 'Spiegel',
+        'stern': 'Stern',
+        'taz': 'Taz',
+        'compact': 'Compact',
+        'freitag': 'Freitag',
+        'nd': 'ND'
+    }
 
     plt.savefig('dist_bias_tests.pdf')
 
-    fig, (ax3, ax4) = plt.subplots(1, 2)
+    fig, ax3 = plt.subplots()
 
-    results = {'age': [], 'gender': []}
+    results = {'Age': [], 'Gender': []}
     for j, n in enumerate(newspapers):
         df_ = results_gender_df
         df_ = df_[df_['newspaper'] == n]
-        results['gender'].append(df_['p_value'].mean())
+        results['Gender'].append(df_['p_value'].mean())
 
         df_ = results_age_df
         df_ = df_[df_['newspaper'] == n]
-        results['age'].append(df_['p_value'].mean())
+        results['Age'].append(df_['p_value'].mean())
 
     x = np.arange(len(newspapers)) 
     width = 0.25
@@ -189,15 +224,20 @@ def main(path, emotion='happy'):
     for attribute, measurement in results.items():
         offset = width * multiplier
         rects = ax3.bar(x + offset, measurement, width, label=attribute)
-        ax3.bar_label(rects, fmt='%.2f', padding=3, rotation=90)
+        ax3.bar_label(rects, fmt='%.2f', padding=3, rotation=90, clip_on=True)
         multiplier += 1
 
+
     # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax3.set_ylabel('mean p-value')
-    ax3.set_xticks(x + width, newspapers)
+    ax3.set_ylabel('Mean p-value')
+    ax3.set_xticks(x + width, [newspaper_label_map.get(n, n.capitalize()) for n in newspapers])
     ax3.legend(loc='upper right', ncols=2)
     ax3.set_ylim(0, 1)  # P-values range from 0 to 1
+    ax3.set_ylim(top=ax3.get_ylim()[1] * 1.1)
     ax3.grid(True, alpha=0.3)
+
+
+    plt.savefig('mean_p_value.pdf')
 
     # make the confidence plot
     df_ = df[df['newspaper'] == 'compact'][[emotion, 'gender']]
@@ -213,8 +253,11 @@ def main(path, emotion='happy'):
     epsilon_male = np.sqrt((1/(2*len(males))) * np.log(2 / 0.05) )
     epsilon_female = np.sqrt((1/(2*len(females))) * np.log(2 / 0.05) )
     colors = [palettes.tue_plot[0] if male else palettes.tue_plot[3] for male in is_male]
+
+    fig, ax4 = plt.subplots()
+
     ax4.scatter(X, y, c=colors, s=10, alpha=0.6, edgecolors='none')
-    ax4.set_xlabel('appiness')
+    ax4.set_xlabel('Happiness')
     ax4.set_ylabel('CDF')
     ax4.grid(True, alpha=0.3)
 
@@ -239,10 +282,11 @@ def main(path, emotion='happy'):
     ax4.legend(handles=legend_elements, loc='best', fontsize=8)
 
 
-    plt.savefig('newspaper_bias_tests.pdf')
+    plt.savefig('compact_bias_tests.pdf')
 
 
 if __name__ == "__main__":
-    path = '/home/scrutycs/uni/data_literacy/politicians/data/politicians_results.csv'
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(script_dir, '..', '..', 'data', 'newspaper_collection_evaluation_results_20_12_2025.csv')
     main(path)
 
