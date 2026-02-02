@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from jax import jit
-from kalman import KalmanFilter, smooth
 from tueplots import bundles, cycler, figsizes
 from tueplots.constants.color import palettes
 
+from kalman import KalmanFilter, smooth
 from utils import add_datetime
 
 plt.rcParams.update(figsizes.icml2024_full())
