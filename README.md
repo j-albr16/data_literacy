@@ -1,6 +1,29 @@
 # Data-Literacy Project 2025
+In our project, we scraped images of politicians from newsoutlets and used face detection and emotion recognition to analyze how different newspapers represent political parties. 
+
+
 ## Analysing Politicians Facial Expressions
-![Trump](assets/trump.jpg)
+This repository contains all scripts/notebook we used for emotion detection, exploratory data analysis and creation of plots.
+
+<div align="center">
+  <img src="assets/trump.jpg" width="600" />
+</div>
+
+## Usage Instructions
+### Getting the data
+As we want to prevent commercial usage with the data we gathered, our dataset is not directly available in this repository.
+
+Therefore all of the scripts wont work by default.
+
+If you need access to the datasets, feel free to contact any of the contributiors.
+
+### Using the data
+The three main things needed for our scripts are:
+1) `newspaper_collection_evaluation_results_20_12_2025.csv` (the dataset containing the results with names, emotions, etc. - **needed for running the scripts in** `/plots`)
+2) `politician_image_dataset` (raw image data for processing - **needed for running** `process.py`)
+3) `politicians` (reference images of the politicans for face detection - **needed for running** `process.py`)
+
+
 
 ## Use Pre-Commit for iPyNotebooks
 ### Installation
@@ -34,16 +57,11 @@ $ git commit -m "msg" nb.ipynb
 ├── assets
 │   └── trump.jpg
 ├── data                        # example structure of the data folder. Can be adjust via args
-│   ├── bundestag_members_with_paths.csv
-│   ├── out.csv
-│   ├── politician_data_set
-│   │   ├── images
-│   │   └── politicians.csv
-│   ├── politician_data_set.zip
-│   └── politicians
+│   ├── newspaper_collection_evaluation_results_20_12_2025.csv
+│   ├── politician_image_data_set
+│   └── politicians # 
 │       ├── afd
 │       ├── data.csv
-│       ├── ds_model_vggface_detector_retinaface_aligned_normalization_base_expand_0.pkl
 │       ├── fdp
 │       ├── gruenen
 │       ├── linke
@@ -59,9 +77,6 @@ $ git commit -m "msg" nb.ipynb
 │   └── exploratory             # plots for exploratory purposes
 ├── process.py
 ├── requirements.txt
-│   │   └── recognition.cpython-313.pyc
 ├── utils.py
 └── venv
-
-28 directories, 57 files
 ```
