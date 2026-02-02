@@ -101,7 +101,7 @@ def get_biases_test_distribution(path, emotion='happy'):
         config = dict(zip(keys, combination))
 
         for target in targets:
-            result = bias_test(df, target=target, **config)
+            result = bias_test(df, emotion, target=target, **config)
 
             if result is not None:
                 mean_true, mean_dist, p_value_mean, size = result
