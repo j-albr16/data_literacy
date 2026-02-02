@@ -4,7 +4,10 @@ In our project, we scraped images of politicians from newsoutlets and used face 
 
 ## Analysing Politicians Facial Expressions
 This repository contains all scripts/notebook we used for emotion detection, exploratory data analysis and creation of plots.
-![Trump](assets/trump.jpg)
+
+<div align="center">
+  <img src="assets/trump.jpg" width="600" />
+</div>
 
 ## Usage Instructions
 ### Getting the data
