@@ -18,7 +18,7 @@ Therefore all of the scripts wont work by default.
 If you need access to the datasets, feel free to contact any of the contributiors.
 
 ### Using the data
-The three main things needed for our scripts are:
+The four main things needed for our scripts are:
 1) `newspaper_collection_evaluation_results_20_12_2025.csv` (the dataset containing the results with names, emotions, etc. - **needed for running the scripts in** `/plots`)
 2) `stern_sz_evaluation_results_2021to2025_06_01_2026.csv`(the dataset containing the results of a larger timeframe with names, emotions, etc. - **needed for running the scripts in** `/plots`)
 2) `politician_image_dataset` (raw image data for processing - **needed for running** `process.py`)
@@ -60,6 +60,7 @@ $ git commit -m "msg" nb.ipynb
 ├── data                        # example structure of the data folder. Can be adjust via args
 │   ├── newspaper_collection_evaluation_results_20_12_2025.csv
 │   ├── politician_image_data_set
+│   ├── stern_sz_evaluation_results_2021to2025_06_01_2026.csv
 │   └── politicians # 
 │       ├── afd
 │       ├── data.csv
