@@ -24,7 +24,7 @@ class RecognitionModel(ABC):
 
 
     @abstractmethod
-    def __call__(self, img_path: str) -> Tuple[str, str, float, float]:
+    def __call__(self, img_path: str | np.ndarray) -> Tuple[str, str, float, float]:
         """
         accepts and img path
         searches for that in image in the database
