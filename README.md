@@ -74,7 +74,6 @@ $ git commit -m "msg" nb.ipynb
 │   ├── emotion.py              # model to detect facial expression
 │   └── recognition.py          # model to label politician faces
 ├── plots
-│   ├── analysis                # plots for analysis
 │   └── exploratory             # plots for exploratory purposes
 ├── process.py
 ├── requirements.txt
