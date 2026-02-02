@@ -20,6 +20,7 @@ If you need access to the datasets, feel free to contact any of the contributior
 ### Using the data
 The three main things needed for our scripts are:
 1) `newspaper_collection_evaluation_results_20_12_2025.csv` (the dataset containing the results with names, emotions, etc. - **needed for running the scripts in** `/plots`)
+2) `stern_sz_evaluation_results_2021to2025_06_01_2026.csv`(the dataset containing the results of a larger timeframe with names, emotions, etc. - **needed for running the scripts in** `/plots`)
 2) `politician_image_dataset` (raw image data for processing - **needed for running** `process.py`)
 3) `politicians` (reference images of the politicans for face detection - **needed for running** `process.py`)
 
