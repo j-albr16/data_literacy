@@ -3,7 +3,6 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from jax import jit
 from tueplots import bundles, cycler, figsizes
 from tueplots.constants.color import palettes
 
