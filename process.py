@@ -125,9 +125,11 @@ def process(
             
             del result
             results = []
+        gc.collect()
+        if (i % 100) == 0:
+            print("Cleared Keras session")
             K.clear_session()
             tf.compat.v1.reset_default_graph()
-        gc.collect()
 
 
 
