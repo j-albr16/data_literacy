@@ -3,6 +3,8 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import os
+
 from tueplots import bundles, cycler, figsizes
 from tueplots.constants.color import palettes
 
@@ -123,9 +125,9 @@ def timeline(
     plt.savefig(f'{surname}_emotions.pdf')
 
 
-
 if __name__ == "__main__":
-
-    path = '/home/scrutycs/uni/data_literacy/politicians/data/timeline.csv'
-    politicians = ['merz', 'merkel', 'trump', 'putin']
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(script_dir, '..', '..', 'data', 'stern_sz_evaluation_results_2021to2025_06_01_2026.csv')
     timeline(path, surname='merz')
+
+
