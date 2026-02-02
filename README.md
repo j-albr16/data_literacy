@@ -60,6 +60,7 @@ $ git commit -m "msg" nb.ipynb
 ├── data                        # example structure of the data folder. Can be adjust via args
 │   ├── newspaper_collection_evaluation_results_20_12_2025.csv
 │   ├── politician_image_data_set
+│   ├── stern_sz_evaluation_results_2021to2025_06_01_2026.csv
 │   └── politicians # 
 │       ├── afd
 │       ├── data.csv
